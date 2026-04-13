@@ -1,0 +1,22 @@
+#!/bin/bash
+# ============================================
+# 📳 XNotify - ส่งข้อความไป xdroid
+# ============================================
+
+CONFIG_FILE="$HOME/.notify_config"
+[ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
+
+XDROID_API_KEY="${XDROID_API_KEY:-k-6516aa1ef0c9}"
+TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-6150548820}"
+
+MESSAGE="$*"
+
+if [ -z "$MESSAGE" ]; then
+    echo "Usage: xnotify <ข้อความ>"
+    echo "Example: xnotify 'Server ทำงานปกติ'"
+    exit 1
+fi
+
+curl -s "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=${MESSAGE}&c=&u=${TELEGRAM_CHAT_ID}" > /dev/null
+
+echo "✅ ส่ง xdroid: $MESSAGE"

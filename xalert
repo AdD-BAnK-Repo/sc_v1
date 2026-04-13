@@ -1,23 +1,21 @@
 #!/bin/bash
 # ============================================
-# 🎙️ Alert - รันคำสั่ง + รายงาน Realtime ไป Telegram
+# 🔔 XAlert - รันคำสั่ง + รายงาน Realtime ไป xdroid
 # ============================================
 
 CONFIG_FILE="$HOME/.notify_config"
 [ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
 
-TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-8591131313:AAELoKXEPS3LNGIzkCl9WALLWu2Ro839mHc}"
+XDROID_API_KEY="${XDROID_API_KEY:-k-6516aa1ef0c9}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-6150548820}"
 
 send_msg() {
-    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-        -d "chat_id=${TELEGRAM_CHAT_ID}" \
-        -d "text=$1" > /dev/null 2>&1
+    curl -s "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=$1&c=&u=${TELEGRAM_CHAT_ID}" > /dev/null 2>&1
 }
 
 if [ -z "$1" ]; then
-    echo "Usage: alert <command>"
-    echo "Example: alert 'apt update'"
+    echo "Usage: xalert <command>"
+    echo "Example: xalert 'apt update'"
     exit 1
 fi
 
@@ -30,20 +28,16 @@ send_msg "🔄 เริ่ม: $COMMAND"
 # รันคำสั่ง
 OUTPUT=$("$@" 2>&1)
 EXIT_CODE=$?
-END_TIME=$(date +%s)
-DURATION=$((END_TIME - START_TIME))
+DURATION=$(($(date +%s) - START_TIME))
 
 # ตัด output
 OUTPUT_SHORT=$(echo "$OUTPUT" | head -15)
-if [ ${#OUTPUT} -gt 1500 ]; then
-    OUTPUT_SHORT="${OUTPUT_SHORT}"$'\n...'
-fi
+[ ${#OUTPUT} -gt 1500 ] && OUTPUT_SHORT="${OUTPUT_SHORT}..."
 
 # สรุปผล
 [ $EXIT_CODE -eq 0 ] && STATUS="✅ เสร็จ (${DURATION}s)" || STATUS="❌ ผิดพลาด (${DURATION}s)"
 
-FULL_MESSAGE="${STATUS}"$'\n'"${COMMAND}"$'\n'"${OUTPUT_SHORT}"
-send_msg "$FULL_MESSAGE"
+send_msg "${STATUS} | ${COMMAND}"$'\n'"${OUTPUT_SHORT}"
 
 echo "✅ เสร็จ (${DURATION}s)"
 exit $EXIT_CODE
