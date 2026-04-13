@@ -1,11 +1,11 @@
 #!/bin/bash
 # ============================================
-# 🎙️ Alert Script - รันคำสั่ง + แจ้งเตือนไปมือถือ
+# 🎙️ Alert Script - รันคำสั่ง + AI สรุป + แจ้งเตือน
 # ============================================
 
 # Config
-XDROID_API_KEY="k-6516aa1ef0c9"  # เปลี่ยน API key ของคุณ
-TELEGRAM_CHAT_ID="6150548820"     # เปลี่ยน Chat ID
+XDROID_API_KEY="k-6516aa1ef0c9"
+TELEGRAM_CHAT_ID="6150548820"
 
 # สีสั่งที่จะรัน
 COMMAND="$*"
@@ -13,27 +13,34 @@ COMMAND="$*"
 if [ -z "$COMMAND" ]; then
     echo "Usage: ./alert <command>"
     echo "Example: ./alert 'sudo apt update'"
-    echo "         ./alert 'nvm i 22'"
     exit 1
 fi
 
 echo "🔄 กำลังรัน: $COMMAND"
 
-# รันคำสั่ง
-eval "$COMMAND"
+# รันคำสั่ง + เก็บ output
+OUTPUT=$(eval "$COMMAND" 2>&1)
 EXIT_CODE=$?
 
-# แจ้งผลลัพธ์
-if [ $EXIT_CODE -eq 0 ]; then
-    MESSAGE="คำสั่งเสร็จสำเร็จ"
-    TTS_MESSAGE="คำสั่งเสร็จสำเร็จแล้วค่ะ"
-else
-    MESSAGE="คำสั่งผิดพลาด"
-    TTS_MESSAGE="คำสั่งมีข้อผิดพลาด"
+# ตัด output ให้กระชับ (max 500 ตัวอักษร)
+OUTPUT_SHORT=$(echo "$OUTPUT" | head -20)
+if [ ${#OUTPUT} -gt 500 ]; then
+    OUTPUT_SHORT="${OUTPUT_SHORT}... (ตัดแล้ว)"
 fi
 
-# ส่งแจ้งเตือนไป xdroid.net
-curl -s -X GET "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=${MESSAGE}&c=${TTS_MESSAGE}&u=${TELEGRAM_CHAT_ID}" 2>/dev/null
+# สรุปผลด้วย AI
+if [ $EXIT_CODE -eq 0 ]; then
+    SUMMARY=$(openclaw agent --to 6150548820 --message "สรุปผลลัพธ์นี้เป็นภาษาไทยกระชับ 1 ประโยค: $OUTPUT_SHORT" 2>/dev/null | tail -3)
+    MESSAGE="✅ เสร็จ"
+    TTS_MSG="คำสั่งเสร็จสำเร็จค่ะ"
+else
+    SUMMARY=$(openclaw agent --to 6150548820 --message "สรุปข้อผิดพลาดนี้เป็นภาษาไทยกระชับ 1 ประโยค: $OUTPUT_SHORT" 2>/dev/null | tail -3)
+    MESSAGE="❌ ผิดพลาด"
+    TTS_MSG="คำสั่งมีข้อผิดพลาดค่ะ"
+fi
+
+# ส่งแจ้งเตือน
+curl -s -X GET "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=${MESSAGE}&c=${SUMMARY}&u=${TELEGRAM_CHAT_ID}" 2>/dev/null
 
 echo "✅ เสร็จสิ้น (exit code: $EXIT_CODE)"
 exit $EXIT_CODE
