@@ -1,7 +1,11 @@
 #!/bin/bash
 # ============================================
-# 🎙️ Alert Script - รันคำสั่ง + แจ้งเตือน TTS
+# 🎙️ Alert Script - รันคำสั่ง + แจ้งเตือนไปมือถือ
 # ============================================
+
+# Config
+XDROID_API_KEY="k-6516aa1ef0c9"  # เปลี่ยน API key ของคุณ
+TELEGRAM_CHAT_ID="6150548820"     # เปลี่ยน Chat ID
 
 # สีสั่งที่จะรัน
 COMMAND="$*"
@@ -19,16 +23,17 @@ echo "🔄 กำลังรัน: $COMMAND"
 eval "$COMMAND"
 EXIT_CODE=$?
 
-# แจ้งผลลัพธ์ด้วย TTS
+# แจ้งผลลัพธ์
 if [ $EXIT_CODE -eq 0 ]; then
-    MESSAGE="คำสั่งเสร็จสำเร็จแล้วค่ะ"
+    MESSAGE="คำสั่งเสร็จสำเร็จ"
+    TTS_MESSAGE="คำสั่งเสร็จสำเร็จแล้วค่ะ"
 else
-    MESSAGE="คำสั่งมีข้อผิดพลาด รหัส $EXIT_CODE"
+    MESSAGE="คำสั่งผิดพลาด"
+    TTS_MESSAGE="คำสั่งมีข้อผิดพลาด"
 fi
 
-# ส่ง TTS notification
-openclaw agent --to 6150548820 --message "[[tts:$MESSAGE]]" --deliver 2>/dev/null || \
-echo "TTS: $MESSAGE"
+# ส่งแจ้งเตือนไป xdroid.net
+curl -s -X GET "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=${MESSAGE}&c=${TTS_MESSAGE}&u=${TELEGRAM_CHAT_ID}" 2>/dev/null
 
 echo "✅ เสร็จสิ้น (exit code: $EXIT_CODE)"
 exit $EXIT_CODE
