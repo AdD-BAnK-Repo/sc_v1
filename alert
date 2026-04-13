@@ -1,0 +1,34 @@
+#!/bin/bash
+# ============================================
+# 🎙️ Alert Script - รันคำสั่ง + แจ้งเตือน TTS
+# ============================================
+
+# สีสั่งที่จะรัน
+COMMAND="$*"
+
+if [ -z "$COMMAND" ]; then
+    echo "Usage: ./alert <command>"
+    echo "Example: ./alert 'sudo apt update'"
+    echo "         ./alert 'nvm i 22'"
+    exit 1
+fi
+
+echo "🔄 กำลังรัน: $COMMAND"
+
+# รันคำสั่ง
+eval "$COMMAND"
+EXIT_CODE=$?
+
+# แจ้งผลลัพธ์ด้วย TTS
+if [ $EXIT_CODE -eq 0 ]; then
+    MESSAGE="คำสั่งเสร็จสำเร็จแล้วค่ะ"
+else
+    MESSAGE="คำสั่งมีข้อผิดพลาด รหัส $EXIT_CODE"
+fi
+
+# ส่ง TTS notification
+openclaw agent --to 6150548820 --message "[[tts:$MESSAGE]]" --deliver 2>/dev/null || \
+echo "TTS: $MESSAGE"
+
+echo "✅ เสร็จสิ้น (exit code: $EXIT_CODE)"
+exit $EXIT_CODE
