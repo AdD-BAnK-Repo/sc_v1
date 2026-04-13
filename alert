@@ -1,46 +1,47 @@
 #!/bin/bash
 # ============================================
-# 🎙️ Alert Script - รันคำสั่ง + AI สรุป + แจ้งเตือน
+# 🎙️ Alert Script - รันคำสั่ง + ส่งผ่าน Telegram
 # ============================================
 
-# Config
-XDROID_API_KEY="k-6516aa1ef0c9"
+TELEGRAM_BOT_TOKEN="8591131313:AAELoKXEPS3LNGIzkCl9WALLWu2Ro839mHc"
 TELEGRAM_CHAT_ID="6150548820"
 
-# สีสั่งที่จะรัน
 COMMAND="$*"
 
 if [ -z "$COMMAND" ]; then
-    echo "Usage: ./alert <command>"
-    echo "Example: ./alert 'sudo apt update'"
+    echo "Usage: alert <command>"
+    echo "Example: alert 'sudo apt update'"
     exit 1
 fi
 
 echo "🔄 กำลังรัน: $COMMAND"
 
-# รันคำสั่ง + เก็บ output
+# รันคำสั่ง
 OUTPUT=$(eval "$COMMAND" 2>&1)
 EXIT_CODE=$?
 
-# ตัด output ให้กระชับ (max 500 ตัวอักษร)
-OUTPUT_SHORT=$(echo "$OUTPUT" | head -20)
-if [ ${#OUTPUT} -gt 500 ]; then
-    OUTPUT_SHORT="${OUTPUT_SHORT}... (ตัดแล้ว)"
+# ตัด output ให้กระชับ
+OUTPUT_SHORT=$(echo "$OUTPUT" | head -15)
+if [ ${#OUTPUT} -gt 600 ]; then
+    OUTPUT_SHORT="${OUTPUT_SHORT}"$'\n'"... (ตัดแล้ว)"
 fi
 
-# สรุปผลด้วย AI
+# สรุปผล
 if [ $EXIT_CODE -eq 0 ]; then
-    SUMMARY=$(openclaw agent --to 6150548820 --message "สรุปผลลัพธ์นี้เป็นภาษาไทยกระชับ 1 ประโยค: $OUTPUT_SHORT" 2>/dev/null | tail -3)
-    MESSAGE="✅ เสร็จ"
-    TTS_MSG="คำสั่งเสร็จสำเร็จค่ะ"
+    STATUS="✅ เสร็จ"
+    SUMMARY="คำสั่งเสร็จสำเร็จ"
 else
-    SUMMARY=$(openclaw agent --to 6150548820 --message "สรุปข้อผิดพลาดนี้เป็นภาษาไทยกระชับ 1 ประโยค: $OUTPUT_SHORT" 2>/dev/null | tail -3)
-    MESSAGE="❌ ผิดพลาด"
-    TTS_MSG="คำสั่งมีข้อผิดพลาดค่ะ"
+    STATUS="❌ ผิดพลาด"
+    SUMMARY="คำสั่งมีข้อผิดพลาด"
 fi
 
-# ส่งแจ้งเตือน
-curl -s -X GET "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=${MESSAGE}&c=${SUMMARY}&u=${TELEGRAM_CHAT_ID}" 2>/dev/null
+# ส่งผ่าน Telegram
+FULL_MESSAGE="${STATUS}"$'\n'"Command: ${COMMAND}"$'\n'"Output:"$'\n'"${OUTPUT_SHORT}"
+
+curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+    -d "chat_id=${TELEGRAM_CHAT_ID}" \
+    -d "text=${FULL_MESSAGE}" \
+    -d "parse_mode=Markdown" > /dev/null
 
 echo "✅ เสร็จสิ้น (exit code: $EXIT_CODE)"
 exit $EXIT_CODE
