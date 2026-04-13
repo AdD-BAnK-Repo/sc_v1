@@ -17,32 +17,36 @@ send_msg() {
 
 if [ -z "$1" ]; then
     echo "Usage: alert <command>"
-    echo "Example: alert 'apt update'"
+    echo "Example: alert 'apt list --upgradable'"
     exit 1
 fi
 
 COMMAND="$@"
 START_TIME=$(date +%s)
 
-# แจ้งเริ่มต้น
+# Step 1: แจ้งเริ่มต้น
 send_msg "🔄 เริ่ม: $COMMAND"
 
-# รันคำสั่ง
-OUTPUT=$("$@" 2>&1)
+# Step 2: รันคำสั่ง (timeout 60s)
+OUTPUT=$(timeout 60 bash -c "$COMMAND" 2>&1)
 EXIT_CODE=$?
-END_TIME=$(date +%s)
-DURATION=$((END_TIME - START_TIME))
+DURATION=$(($(date +%s) - START_TIME))
 
-# ตัด output
+# Step 3: ตัด output ให้กระชับ (max 15 บรรทัด)
 OUTPUT_SHORT=$(echo "$OUTPUT" | head -15)
 if [ ${#OUTPUT} -gt 1500 ]; then
     OUTPUT_SHORT="${OUTPUT_SHORT}"$'\n...'
 fi
 
-# สรุปผล
-[ $EXIT_CODE -eq 0 ] && STATUS="✅ เสร็จ (${DURATION}s)" || STATUS="❌ ผิดพลาด (${DURATION}s)"
+# Step 4: สรุปผล
+if [ $EXIT_CODE -eq 0 ]; then
+    STATUS="✅ เสร็จ (${DURATION}s)"
+else
+    STATUS="❌ ผิดพลาด (${DURATION}s)"
+fi
 
-FULL_MESSAGE="${STATUS}"$'\n'"${COMMAND}"$'\n'"${OUTPUT_SHORT}"
+# Step 5: ส่งผลลัพธ์
+FULL_MESSAGE="${STATUS}"$'\n'"CMD: ${COMMAND}"$'\n'"${OUTPUT_SHORT}"
 send_msg "$FULL_MESSAGE"
 
 echo "✅ เสร็จ (${DURATION}s)"
