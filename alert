@@ -1,9 +1,9 @@
 #!/bin/bash
 # ============================================
-# 🎙️ Alert Script - รันคำสั่ง + ส่งผ่าน Telegram
+# 🎙️ Alert Script - รันคำสั่ง + แจ้งเตือน xdroid
 # ============================================
 
-TELEGRAM_BOT_TOKEN="8591131313:AAELoKXEPS3LNGIzkCl9WALLWu2Ro839mHc"
+XDROID_API_KEY="k-6516aa1ef0c9"
 TELEGRAM_CHAT_ID="6150548820"
 
 if [ -z "$1" ]; then
@@ -22,7 +22,7 @@ EXIT_CODE=$?
 # ตัด output ให้กระชับ
 OUTPUT_SHORT=$(echo "$OUTPUT" | head -15)
 if [ ${#OUTPUT} -gt 600 ]; then
-    OUTPUT_SHORT="${OUTPUT_SHORT}"$'\n'"... (ตัดแล้ว)"
+    OUTPUT_SHORT="${OUTPUT_SHORT}"$'\n... (ตัดแล้ว)"
 fi
 
 # สรุปผล
@@ -32,12 +32,9 @@ else
     STATUS="❌ ผิดพลาด"
 fi
 
-# ส่งผ่าน Telegram
-FULL_MESSAGE="${STATUS}"$'\n'"Command: ${COMMAND}"$'\n'"Output:"$'\n'"${OUTPUT_SHORT}"
-
-curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-    -d "chat_id=${TELEGRAM_CHAT_ID}" \
-    -d "text=${FULL_MESSAGE}" > /dev/null
+# ส่งแจ้งเตือน xdroid
+FULL_MESSAGE="${STATUS} | ${COMMAND}"
+curl -s "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=${FULL_MESSAGE}&c=${OUTPUT_SHORT}&u=${TELEGRAM_CHAT_ID}" > /dev/null
 
 echo "✅ เสร็จสิ้น (exit code: $EXIT_CODE)"
 exit $EXIT_CODE
