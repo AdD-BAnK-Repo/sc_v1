@@ -1,0 +1,20 @@
+#!/bin/bash
+# ============================================
+# 📱 Notify Script - ส่งแจ้งเตือนไปมือถือ
+# ============================================
+
+XDROID_API_KEY="k-6516aa1ef0c9"
+TELEGRAM_CHAT_ID="6150548820"
+
+MESSAGE="$*"
+
+if [ -z "$MESSAGE" ]; then
+    echo "Usage: notify <ข้อความ>"
+    echo "Example: notify 'Server ทำงานปกติ'"
+    exit 1
+fi
+
+# ส่งแจ้งเตือน
+curl -s -X GET "http://xdroid.net/api/message?k=${XDROID_API_KEY}&t=${MESSAGE}&c=&u=${TELEGRAM_CHAT_ID}" 2>/dev/null
+
+echo "✅ ส่งแจ้งเตือน: $MESSAGE"
