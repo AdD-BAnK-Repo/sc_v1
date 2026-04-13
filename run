@@ -1,0 +1,41 @@
+#!/bin/bash
+# ============================================
+# 🖥️ Run - รันคำสั่งจาก Telegram
+# ============================================
+
+CONFIG_FILE="$HOME/.notify_config"
+[ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
+
+TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-8591131313:AAELoKXEPS3LNGIzkCl9WALLWu2Ro839mHc}"
+TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-6150548820}"
+
+send_msg() {
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d "chat_id=${TELEGRAM_CHAT_ID}" \
+        -d "text=$1" > /dev/null 2>&1
+}
+
+COMMAND="$*"
+
+if [ -z "$COMMAND" ]; then
+    echo "Usage: /run <command>"
+    echo "Example: /run apt update"
+    exit 1
+fi
+
+START_TIME=$(date +%s)
+send_msg "🔄 กำลังรัน: $COMMAND"
+
+OUTPUT=$(timeout 120 bash -c "$COMMAND" 2>&1)
+EXIT_CODE=$?
+DURATION=$(($(date +%s) - START_TIME))
+
+OUTPUT_SHORT=$(echo "$OUTPUT" | head -20)
+[ ${#OUTPUT} -gt 2000 ] && OUTPUT_SHORT="${OUTPUT_SHORT}"$'\n...'
+
+[ $EXIT_CODE -eq 0 ] && STATUS="✅ เสร็จ (${DURATION}s)" || STATUS="❌ ผิดพลาด (${DURATION}s)"
+
+send_msg "${STATUS}"$'\n'"CMD: ${COMMAND}"$'\n'"${OUTPUT_SHORT}"
+
+echo "$STATUS"
+exit $EXIT_CODE
