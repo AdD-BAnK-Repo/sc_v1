@@ -3,7 +3,7 @@
 clear
 echo "===== ONE CLICK INSTALL USER MANAGER ====="
 
-SCRIPT_URL="https://raw.githubusercontent.com/PRIVATE-OBSIDIAN-NOTE/sc_v1/refs/heads/main/user_manager.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/AdD-BAnK-Repo/sc_v1/master/user_manager.sh"
 INSTALL_PATH="/usr/local/bin/user-manager"
 
 if [ "$EUID" -ne 0 ]; then
@@ -32,8 +32,21 @@ echo "[INFO] Creating log file..."
 touch /var/log/user_manager.log
 chmod 644 /var/log/user_manager.log
 
-echo "[SUCCESS] Installation completed!"
 echo ""
-echo "Usage:"
-echo "👉 Run: user-manager"
+echo "=========================================="
+echo "[SUCCESS] ติดตั้งเสร็จแล้ว แอดแบงค์!"
+echo "=========================================="
+echo ""
+echo "📌 วิธีใช้งาน:"
+echo "   user-manager"
+echo ""
+echo "📌 คำสั่งอื่นๆ:"
+echo "   user-manager notify <ข้อความ>  - ส่ง notification"
+echo "   user-manager xnotify <ข้อความ>  - ส่ง notification + dialog"
+echo "   user-manager alert              - แสดง alert"
+echo "   user-manager xalert             - แสดง alert dialog"
+echo ""
+echo "📁 Script: $INSTALL_PATH"
+echo "📁 Log: /var/log/user_manager.log"
+echo "=========================================="
 echo ""
