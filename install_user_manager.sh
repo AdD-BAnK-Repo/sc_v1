@@ -3,7 +3,7 @@
 clear
 echo "===== ONE CLICK INSTALL USER MANAGER ====="
 
-SCRIPT_URL="https://raw.githubusercontent.com/AdD-BAnK-Repo/sc_v1/master/user_manager.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/AdD-BAnK-Repo/sc_v1/refs/heads/master/user_manager.sh"
 INSTALL_PATH="/usr/local/bin/user-manager"
 
 if [ "$EUID" -ne 0 ]; then
